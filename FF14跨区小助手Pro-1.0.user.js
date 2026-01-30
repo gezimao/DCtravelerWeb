@@ -213,7 +213,7 @@
         area.innerHTML = `
             <button id="btn-char" class="ff14-action-btn">选择角色</button>
             <button id="btn-target" class="ff14-action-btn">选择目标大区</button>
-            <button id="btn-start" class="ff14-action-btn" disabled>LINK START</button>
+            <button id="btn-start" class="ff14-action-btn" disabled>开始尝试</button>
         `;
         document.getElementById('btn-char').onclick = openCharWindow;
         document.getElementById('btn-target').onclick = openTargetWindow;
