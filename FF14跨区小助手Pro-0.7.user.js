@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         FF14跨区小助手Pro
-// @namespace    https://github.com/LIDaoJY
+// @namespace    https://github.com/gezimao/DCtravelerWeb
 // @version      1.0
 // @description  FF14 跨区传送辅助脚本 - 自动监控服务器状态并执行跨区传送
 // @author       LIDaoJY,gezimao
