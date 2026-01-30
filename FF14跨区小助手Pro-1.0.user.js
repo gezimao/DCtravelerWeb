@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF14跨区小助手Pro
 // @namespace    https://github.com/gezimao/DCtravelerWeb
-// @version      1.0
+// @version      1.1
 // @description  FF14 跨区传送辅助脚本 - 自动监控服务器状态并执行跨区传送
 // @author       LIDaoJY,gezimao
 // @match        https://ff14bjz.sdo.com/RegionKanTelepo*
@@ -26,14 +26,13 @@
     // =============== 统一日志桥接 ===============
     function addLog(message) {
         if (!isTopWindow) {
-            // 子框架内的操作日志通过 postMessage 传给父窗口
             window.parent.postMessage({ type: 'FF14_TRACE_LOG', content: message }, '*');
             return;
         }
         const timestamp = new Date().toLocaleTimeString('zh-CN', { hour12: false });
         const entry = document.createElement('div');
         entry.className = 'ff14-log-entry';
-        entry.textContent = `[${timestamp}] ${message}`;
+        entry.textContent = `[${timestamp}] ${message}`; // 仅保留时间戳
         if (logContainer) {
             logContainer.appendChild(entry);
             logContainer.scrollTop = logContainer.scrollHeight;
@@ -44,12 +43,11 @@
         console.log(`[${timestamp}] ${message}`);
     }
 
-    // =============== [子框架核心逻辑] 自动协议勾选 (login.u.sdo.com) ===============
+    // =============== [子框架核心逻辑] 自动协议勾选 ===============
     if (!isTopWindow) {
         addLog('登录组件脚本加载成功，正在扫描协议框');
 
         const scanTimer = setInterval(() => {
-            // 读取主窗口持久化的配置
             const autoAgree = GM_getValue('ff14_auto_agree_enabled', true);
             if (!autoAgree) return;
 
@@ -58,15 +56,10 @@
 
             if (checkbox && !checkbox.checked) {
                 try {
-                    // 1. 尝试直接点击 input
                     checkbox.click();
-                    // 2. 强制设置状态
                     checkbox.checked = true;
-                    // 3. 触发父级容器点击
                     if (agreementPara) agreementPara.click();
-                    // 4. 派发事件确保网页程序监听到状态改变
                     checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-
                     addLog('协议须知已自动勾选');
                 } catch (e) {
                     addLog('自动勾选执行失败: ' + e.message);
@@ -76,9 +69,8 @@
         return;
     }
 
-    // =============== [主窗口逻辑] ff14bjz.sdo.com ===============
+    // =============== [主窗口逻辑] ===============
 
-    // 监听子框架传来的日志消息
     window.addEventListener('message', (e) => {
         if (e.data && e.data.type === 'FF14_TRACE_LOG') {
             addLog(e.data.content);
@@ -113,23 +105,18 @@
         #ff14-control-section { flex: 0 0 auto; padding-bottom: 10px; }
         #ff14-log-section { flex: 1 1 auto; overflow-y: auto; padding-top: 10px; background: #111; border-radius: 4px; border: 1px solid #333; }
         .ff14-log-entry { font-size: 11px; line-height: 1.4; margin-bottom: 2px; color: #bbb; padding: 0 5px; }
-
         .ff14-action-btn { display: inline-block; margin: 5px 5px 0 0; padding: 6px 12px; background: linear-gradient(to bottom, #2196F3, #1976D2); border: 1px solid #0d47a1; border-radius: 4px; color: white; cursor: pointer; font-size: 13px; }
         .ff14-action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
         .ff14-config-panel { margin-top: 8px; padding: 8px; background: rgba(60,60,60,0.5); border-radius: 4px; border: 1px solid #444; }
         .ff14-config-row { margin-bottom: 5px; display: flex; align-items: center; font-size: 11px; color: #ddd; gap: 5px; }
         .ff14-input-small { width: 40px; background: #222; color: #fff; border: 1px solid #555; text-align: center; border-radius: 2px; }
-
         #ff14-fetch-btn { width: 100%; padding: 10px; background: #4CAF50; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold; }
-
         .ff14-selection-window { position: fixed; top: 150px; left: 50%; transform: translateX(-50%); background: rgba(30, 30, 30, 0.98); color: #fff; z-index: 1000000; padding: 15px; border-radius: 6px; width: 320px; box-shadow: 0 0 20px rgba(0,0,0,0.8); border: 1px solid #666; }
         .ff14-window-header { cursor: move; font-weight: bold; margin-bottom: 10px; display: flex; justify-content: space-between; }
         .ff14-list-container { height: 180px; overflow-y: auto; border: 1px solid #444; background: #222; margin: 10px 0; }
         .ff14-list-container li { padding: 6px; cursor: pointer; border-bottom: 1px solid #333; font-size: 12px; }
         .ff14-list-container li:hover { background: #333; }
         .ff14-list-container li.selected { background: #1976D2; }
-
         #ff14-status-window { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); width: 500px; height: 350px; background: rgba(30, 30, 30, 0.95); color: #fff; z-index: 999998; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; border: 1px solid #555; }
         .status-column { flex: 1; overflow-y: auto; padding: 5px; background: #222; border: 1px solid #444; font-size: 12px; }
         .status-open { color: #4CAF50; }
@@ -160,7 +147,7 @@
                         <label>查询间隔(秒):</label>
                         <input type="number" id="ff14-opt-interval" class="ff14-input-small" value="30" min="1">
                         <input type="checkbox" id="ff14-opt-burst" checked>
-                        <label for="ff14-opt-burst" style="color:#FFC107;">整10分时缩短间隔至1秒（可能没啥意义）</label>
+                        <label for="ff14-opt-burst" style="color:#FFC107;">整10分时1秒间隔（估计没用）</label>
                     </div>
                 </div>
                 <div id="ff14-action-area" style="display:none; border-top:1px solid #444; margin-top:8px; padding-top:8px;"></div>
@@ -194,15 +181,21 @@
         addLog('脚本已启动');
     }
 
-    // =============== 业务逻辑 ===============
     function fetchServerData() {
-        addLog('获取账号下角色及服务器信息...');
-        apiGet('https://ff14bjz.sdo.com/api/orderserivce/queryGroupListTravelSource?appId=100001900', (data) => {
-            FF14_GROUP_LIST = safeJsonParse(data.groupList);
-            if (FF14_GROUP_LIST) {
-                fetchButton.style.display = 'none';
-                showActionArea();
-                addLog('列表加载完成');
+        addLog('正在请求服务器列表...');
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: 'https://ff14bjz.sdo.com/api/orderserivce/queryGroupListTravelSource?appId=100001900',
+            onload: (res) => {
+                const data = JSON.parse(res.responseText);
+                if (data.return_code === 0 && data.data) {
+                    FF14_GROUP_LIST = JSON.parse(data.data.groupList);
+                    fetchButton.style.display = 'none';
+                    showActionArea();
+                    addLog('服务器列表加载成功');
+                } else {
+                    addLog('获取失败，请确认是否已在网页登录');
+                }
             }
         });
     }
@@ -230,9 +223,9 @@
     function toggleMonitoring() {
         if (linkStartBtn.textContent === '取消重试') {
             if (retryTimeoutId) clearTimeout(retryTimeoutId);
-            linkStartBtn.textContent = 'LINK START';
+            linkStartBtn.textContent = '开始尝试';
             linkStartBtn.style.background = 'linear-gradient(to bottom, #2196F3, #1976D2)';
-            addLog('已取消自动重试流程');
+            addLog('自动重试已取消');
             return;
         }
         if (statusCheckTimeoutId) stopMonitoring();
@@ -249,31 +242,43 @@
 
     function stopMonitoring() {
         if (statusCheckTimeoutId) { clearTimeout(statusCheckTimeoutId); statusCheckTimeoutId = null; }
-        linkStartBtn.textContent = '开始';
+        linkStartBtn.textContent = '开始重试';
         linkStartBtn.style.background = 'linear-gradient(to bottom, #2196F3, #1976D2)';
         if (statusWindow && document.body.contains(statusWindow)) document.body.removeChild(statusWindow);
-        addLog('已停止');
+        addLog('监控已停止');
     }
 
     function runLoop() {
         if (!linkStartBtn || linkStartBtn.textContent !== 'STOP') return;
 
-        addLog(`查询目标大区状态...`);
-        apiGet('https://ff14bjz.sdo.com/api/orderserivce/queryGroupListTravelTarget?appId=100001900&areaId=-1&groupId=-1', (data) => {
-            const list = safeJsonParse(data.groupList);
-            if (list) {
-                FF14_STATUS_INFO = list.map(a => ({
-                    areaId: a.areaId, areaName: a.areaName, state: a.state,
-                    groups: a.groups.map(g => ({ groupId: g.groupId, groupName: g.groupName, queueTime: g.queueTime, groupCode: g.groupCode }))
-                }));
-                updateStatusUI();
-                checkAvailability();
-            }
+        addLog(`正在获取目标大区实时状态...`);
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: 'https://ff14bjz.sdo.com/api/orderserivce/queryGroupListTravelTarget?appId=100001900&areaId=-1&groupId=-1',
+            onload: (res) => {
+                const data = JSON.parse(res.responseText);
+                if (data.return_code === 0 && data.data) {
+                    const list = JSON.parse(data.data.groupList);
+                    FF14_STATUS_INFO = list.map(a => ({
+                        areaId: a.areaId, areaName: a.areaName, state: a.state,
+                        groups: a.groups.map(g => ({ groupId: g.groupId, groupName: g.groupName, queueTime: g.queueTime, groupCode: g.groupCode }))
+                    }));
+                    updateStatusUI();
 
-            if (linkStartBtn.textContent === 'STOP') {
-                const config = getNextInterval();
-                addLog(`${config.mode}，${config.seconds} 秒后重试`);
-                statusCheckTimeoutId = setTimeout(runLoop, config.seconds * 1000);
+                    const target = FF14_STATUS_INFO.find(a => a.areaId == selectedTargetAreaInfo.areaId);
+                    if (target && (target.state === 0 || target.state === 1)) {
+                        addLog(`目标大区 ${target.areaName} 可用`);
+                        stopMonitoring();
+                        playBeep();
+                        const avGroups = target.groups.filter(g => g.queueTime === 0);
+                        if (avGroups.length > 0) executeMigration(target, avGroups);
+                        else addLog('目标虽开放但负载已满');
+                    } else {
+                        const config = getNextInterval();
+                        addLog(`${config.mode}，${config.seconds} 秒后重试`);
+                        statusCheckTimeoutId = setTimeout(runLoop, config.seconds * 1000);
+                    }
+                }
             }
         });
     }
@@ -284,121 +289,114 @@
         const burst = document.getElementById('ff14-opt-burst').checked;
         const custom = parseInt(document.getElementById('ff14-opt-interval').value) || 30;
         const isNear = burst && ((min % 10 === 0 && sec <= 15) || (min % 10 === 9 && sec >= 55));
-        return { seconds: isNear ? 1 : custom, mode: isNear ? '冲刺模式' : '常规模式' };
-    }
-
-    function checkAvailability() {
-        if (!selectedTargetAreaInfo || !FF14_STATUS_INFO) return;
-        const target = FF14_STATUS_INFO.find(a => a.areaId == selectedTargetAreaInfo.areaId);
-        if (target && (target.state === 0 || target.state === 1)) {
-            addLog(`目标大区 ${target.areaName} 可用`);
-            stopMonitoring();
-            playBeep();
-
-            const avGroups = target.groups.filter(g => g.queueTime === 0);
-            if (avGroups.length > 0) executeMigration(target, avGroups);
-            else addLog('目标开放但服务器负载已满');
-        } else if (target) {
-            addLog(`${target.areaName}: ${target.state === 2 ? '阻塞' : '未知'}`);
-        }
+        return { seconds: isNear ? 1 : custom, mode: isNear ? '快速模式' : '常规模式' };
     }
 
     function executeMigration(targetArea, groups) {
         const sourceArea = FF14_GROUP_LIST.find(a => a.areaId == selectedRoleInfo.selectedAreaId);
         const sourceGroup = sourceArea?.groups?.find(g => g.groupId == selectedRoleInfo.selectedGroupId);
-        if (!sourceArea || !sourceGroup) return;
+
+        if (!sourceArea || !sourceGroup) {
+            addLog('错误: 无法获取源服务器信息');
+            return;
+        }
 
         const targetGroup = groups[Math.floor(Math.random() * groups.length)];
         const roleList = [{ roleId: selectedRoleInfo.roleId, roleName: selectedRoleInfo.roleName, key: 1 }];
 
         const params = new URLSearchParams({
-            appId: '100001900', areaId: sourceArea.areaId, areaName: sourceArea.areaName,
-            groupId: sourceGroup.groupId, groupCode: sourceGroup.groupCode, groupName: sourceGroup.groupName,
+            appId: '100001900',
+            areaId: sourceArea.areaId,
+            areaName: sourceArea.areaName,
+            groupId: sourceGroup.groupId,
+            groupCode: sourceGroup.groupCode,
+            groupName: sourceGroup.groupName,
             productId: '1', productNum: '1', migrationType: '4',
-            targetArea: targetArea.areaId, targetAreaName: targetArea.areaName,
-            targetGroupId: targetGroup.groupId, targetGroupCode: targetGroup.groupCode, targetGroupName: targetGroup.groupName,
-            roleList: JSON.stringify(roleList), isMigrationTimes: '0'
+            targetArea: targetArea.areaId,
+            targetAreaName: targetArea.areaName,
+            targetGroupId: targetGroup.groupId,
+            targetGroupCode: targetGroup.groupCode,
+            targetGroupName: targetGroup.groupName,
+            roleList: JSON.stringify(roleList),
+            isMigrationTimes: '0'
         });
 
-        addLog(`提交跨区申请: ${sourceGroup.groupName} -> ${targetGroup.groupName}`);
+        addLog(`正在提交跨区申请: ${sourceGroup.groupName} -> ${targetGroup.groupName}`);
         GM_xmlhttpRequest({
             method: 'GET',
             url: `https://ff14bjz.sdo.com/api/orderserivce/travelOrder?${params.toString()}`,
             onload: (res) => {
-                const data = safeJsonParse(res.responseText);
-                if (data?.return_code === 0 && data.data?.resultCode === 0) {
-                    addLog(`传送申请已提交成功`);
+                const data = JSON.parse(res.responseText);
+                if (data.return_code === 0 && data.data?.resultCode === 0) {
+                    addLog(`跨区传送申请已提交成功`);
                     showOrderDialog(data.data.orderId);
                 } else {
-                    addLog(data?.data?.resultMsg || '接口拒绝');
-                    startRetryTimer();
+                    const errorMsg = data.data?.resultMsg || data.return_message || '接口拒绝';
+                    addLog(`申请失败: ${errorMsg}`);
+                    linkStartBtn.textContent = '取消重试';
+                    linkStartBtn.style.background = '#FF9800';
+                    retryTimeoutId = setTimeout(() => {
+                        if (linkStartBtn.textContent === '取消重试') startMonitoring();
+                    }, 80000);
                 }
             },
-            onerror: () => startRetryTimer()
+            onerror: () => {
+                addLog('网络错误，跨区申请提交失败');
+            }
         });
-    }
-
-    function startRetryTimer() {
-        linkStartBtn.textContent = '取消重试';
-        linkStartBtn.style.background = '#FF9800';
-        addLog(`传送未成功，${RETRY_DELAY_TIMEOUT / 1000} 秒后自动重试`);
-        retryTimeoutId = setTimeout(() => {
-            if (linkStartBtn.textContent === '取消重试') startMonitoring();
-        }, RETRY_DELAY_TIMEOUT);
     }
 
     function showOrderDialog(id) {
         const div = document.createElement('div');
         div.style = "position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#222;color:#fff;padding:25px;border:2px solid #4CAF50;z-index:1000010;text-align:center;border-radius:10px;box-shadow:0 0 30px #000";
-        div.innerHTML = `<h3>申请成功</h3><p>订单号: ${id}</p><button id="btn-go-order" style="padding:10px 20px;background:#4CAF50;color:#fff;border:none;cursor:pointer;margin-top:10px">前往订单列表</button>`;
+        div.innerHTML = `<h3 style="color:#4CAF50">提交成功</h3><p>订单号: ${id}</p><button id="btn-go" style="padding:10px 20px;background:#4CAF50;color:#fff;border:none;cursor:pointer;">查看订单列表</button>`;
         document.body.appendChild(div);
-        document.getElementById('btn-go-order').onclick = () => window.location.href = 'https://ff14bjz.sdo.com/orderList';
+        document.getElementById('btn-go').onclick = () => window.location.href = 'https://ff14bjz.sdo.com/orderList';
     }
 
     function openCharWindow() {
         if (characterSelectionWindow && document.body.contains(characterSelectionWindow)) { characterSelectionWindow.style.display='block'; return; }
         characterSelectionWindow = createWindow('win-char', '选择角色');
-        characterSelectionWindow.innerHTML += `<div style="font-size:12px;"><label>区域:</label><select id="sel-area" style="width:100%;margin-bottom:5px;background:#333;color:#fff;"></select><label>服务器:</label><select id="sel-group" style="width:100%;background:#333;color:#fff;"></select><button id="btn-query-role" class="ff14-action-btn" style="width:100%;margin-top:10px;">查询服务器角色</button><div id="role-list" class="ff14-list-container"></div><button id="btn-confirm-role" class="ff14-action-btn" style="width:100%;display:none;">确认选择</button></div>`;
+        characterSelectionWindow.innerHTML += `<div style="font-size:12px;"><label>区域:</label><select id="sel-area" style="width:100%;background:#333;color:#fff;"></select><label>服务器:</label><select id="sel-group" style="width:100%;background:#333;color:#fff;"></select><button id="btn-query" class="ff14-action-btn" style="width:100%;">查询角色</button><div id="r-list" class="ff14-list-container"></div><button id="btn-ok" class="ff14-action-btn" style="width:100%;display:none;">确认选择</button></div>`;
         document.body.appendChild(characterSelectionWindow);
-        const aSel = characterSelectionWindow.querySelector('#sel-area');
-        const gSel = characterSelectionWindow.querySelector('#sel-group');
-        FF14_GROUP_LIST.forEach(a => aSel.add(new Option(a.areaName, a.areaId)));
-        aSel.onchange = () => {
-            gSel.innerHTML = "";
-            const area = FF14_GROUP_LIST.find(a => a.areaId == aSel.value);
-            area.groups.forEach(g => gSel.add(new Option(g.groupName, g.groupId)));
-        };
-        aSel.onchange();
-        characterSelectionWindow.querySelector('#btn-query-role').onclick = () => {
-            apiGet(`https://ff14bjz.sdo.com/api/gmallgateway/queryRoleList4Migration?appId=100001900&areaId=${aSel.value}&groupId=${gSel.value}`, (data) => {
-                const roles = safeJsonParse(data.roleList) || [];
-                const list = characterSelectionWindow.querySelector('#role-list');
-                list.innerHTML = "<ul></ul>";
-                roles.forEach(r => {
-                    const li = document.createElement('li'); li.textContent = r.roleName;
-                    li.onclick = () => {
-                        list.querySelectorAll('li').forEach(el => el.classList.remove('selected'));
-                        li.classList.add('selected');
-                        selectedRoleInfo = { roleId: r.roleId, roleName: r.roleName, selectedAreaId: aSel.value, selectedGroupId: gSel.value };
-                        characterSelectionWindow.querySelector('#btn-confirm-role').style.display='block';
-                    };
-                    list.firstChild.appendChild(li);
-                });
+        const aS = characterSelectionWindow.querySelector('#sel-area');
+        const gS = characterSelectionWindow.querySelector('#sel-group');
+        FF14_GROUP_LIST.forEach(a => aS.add(new Option(a.areaName, a.areaId)));
+        aS.onchange = () => { gS.innerHTML = ""; const area = FF14_GROUP_LIST.find(a => a.areaId == aS.value); area.groups.forEach(g => gS.add(new Option(g.groupName, g.groupId))); }; aS.onchange();
+        characterSelectionWindow.querySelector('#btn-query').onclick = () => {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: `https://ff14bjz.sdo.com/api/gmallgateway/queryRoleList4Migration?appId=100001900&areaId=${aS.value}&groupId=${gS.value}`,
+                onload: (res) => {
+                    const data = JSON.parse(res.responseText);
+                    const roles = data.data.roleList ? JSON.parse(data.data.roleList) : [];
+                    const list = characterSelectionWindow.querySelector('#r-list'); list.innerHTML = "<ul></ul>";
+                    roles.forEach(r => {
+                        const li = document.createElement('li'); li.textContent = r.roleName;
+                        li.onclick = () => {
+                            list.querySelectorAll('li').forEach(el => el.classList.remove('selected'));
+                            li.classList.add('selected');
+                            selectedRoleInfo = { roleId: r.roleId, roleName: r.roleName, selectedAreaId: aS.value, selectedGroupId: gS.value };
+                            characterSelectionWindow.querySelector('#btn-ok').style.display='block';
+                        };
+                        list.firstChild.appendChild(li);
+                    });
+                }
             });
         };
-        characterSelectionWindow.querySelector('#btn-confirm-role').onclick = () => {
-            addLog(`已设定角色: ${selectedRoleInfo.roleName}`);
+        characterSelectionWindow.querySelector('#btn-ok').onclick = () => {
+            addLog(`已选定角色: ${selectedRoleInfo.roleName}`);
             characterSelectionWindow.style.display='none';
             updateLinkStartState();
         };
         enableDrag(characterSelectionWindow, characterSelectionWindow.querySelector('.ff14-window-header'));
-        characterSelectionWindow.querySelector('.ff14-helper-btn').onclick = () => characterSelectionWindow.style.display='none';
+        characterSelectionWindow.querySelector('.ff14-window-btn').onclick = () => characterSelectionWindow.style.display='none';
     }
 
     function openTargetWindow() {
         if (targetAreaSelectionWindow && document.body.contains(targetAreaSelectionWindow)) { targetAreaSelectionWindow.style.display='block'; return; }
         targetAreaSelectionWindow = createWindow('win-target', '选择目标大区');
-        targetAreaSelectionWindow.innerHTML += `<div id="target-area-list" class="ff14-list-container"><ul></ul></div><button id="btn-confirm-target" class="ff14-action-btn" style="width:100%;display:none;">确认选择</button>`;
+        targetAreaSelectionWindow.innerHTML += `<div id="t-list" class="ff14-list-container"><ul></ul></div><button id="btn-tok" class="ff14-action-btn" style="width:100%;display:none;">确认选择</button>`;
         document.body.appendChild(targetAreaSelectionWindow);
         const ul = targetAreaSelectionWindow.querySelector('ul');
         FF14_GROUP_LIST.forEach(a => {
@@ -407,12 +405,12 @@
                 ul.querySelectorAll('li').forEach(el => el.classList.remove('selected'));
                 li.classList.add('selected');
                 selectedTargetAreaInfo = { areaId: a.areaId, areaName: a.areaName };
-                targetAreaSelectionWindow.querySelector('#btn-confirm-target').style.display='block';
+                targetAreaSelectionWindow.querySelector('#btn-tok').style.display='block';
             };
             ul.appendChild(li);
         });
-        targetAreaSelectionWindow.querySelector('#btn-confirm-target').onclick = () => {
-            addLog(`已设定目标大区: ${selectedTargetAreaInfo.areaName}`);
+        targetAreaSelectionWindow.querySelector('#btn-tok').onclick = () => {
+            addLog(`已选定目标大区: ${selectedTargetAreaInfo.areaName}`);
             targetAreaSelectionWindow.style.display='none';
             updateLinkStartState();
         };
@@ -422,57 +420,36 @@
 
     function openStatusWindow() {
         if (statusWindow && document.body.contains(statusWindow)) return;
-        statusWindow = document.createElement('div');
-        statusWindow.id = 'ff14-status-window';
-        statusWindow.innerHTML = `<div class="ff14-window-header"><span>状态详情监控</span></div><div style="display:flex; flex:1; gap:5px; overflow:hidden;"><div id="st-area-list" class="status-column"></div><div id="st-group-list" class="status-column">详情</div></div>`;
-        document.body.appendChild(statusWindow);
-        enableDrag(statusWindow, statusWindow.querySelector('.ff14-window-header'));
+        statusWindow = document.createElement('div'); statusWindow.id = 'ff14-status-window';
+        statusWindow.innerHTML = `<div class="ff14-window-header"><span>状态实时监控</span></div><div style="display:flex; flex:1; gap:5px; overflow:hidden;"><div id="sa-list" class="status-column"></div><div id="sg-list" class="status-column">详情</div></div>`;
+        document.body.appendChild(statusWindow); enableDrag(statusWindow, statusWindow.querySelector('.ff14-window-header'));
     }
 
     function updateStatusUI() {
-        if (!statusWindow) return;
-        const alist = statusWindow.querySelector('#st-area-list');
-        alist.innerHTML = "";
+        if (!statusWindow) return; const alist = statusWindow.querySelector('#sa-list'); alist.innerHTML = "";
         FF14_STATUS_INFO.forEach(a => {
-            const div = document.createElement('div');
-            div.className = `status-item ${a.state === 0 ? 'status-open' : (a.state === 1 ? 'status-busy' : 'status-blocked')}`;
-            div.textContent = `${a.areaName}`;
-            div.onclick = () => {
-                const glist = statusWindow.querySelector('#st-group-list');
-                glist.innerHTML = "";
+            const d = document.createElement('div');
+            d.className = `status-item ${a.state === 0 ? 'status-open' : (a.state === 1 ? 'status-busy' : 'status-blocked')}`;
+            d.textContent = `${a.areaName}`;
+            d.onclick = () => {
+                const gl = statusWindow.querySelector('#sg-list'); gl.innerHTML = "";
                 a.groups.forEach(g => {
                     const gd = document.createElement('div');
                     gd.className = `status-item ${g.queueTime === 0 ? 'status-open' : 'status-busy'}`;
                     gd.textContent = `${g.groupName}`;
-                    glist.appendChild(gd);
+                    gl.appendChild(gd);
                 });
             };
-            alist.appendChild(div);
+            alist.appendChild(d);
         });
     }
 
     function createWindow(id, title) {
-        const win = document.createElement('div');
-        win.id = id; win.className = 'ff14-selection-window';
-        win.innerHTML = `<div class="ff14-window-header"><span>${title}</span><div class="ff14-helper-btn">×</div></div>`;
-        return win;
+        const win = document.createElement('div'); win.id = id; win.className = 'ff14-selection-window';
+        win.innerHTML = `<div class="ff14-window-header"><span>${title}</span><div class="ff14-window-btn">×</div></div>`; return win;
     }
 
-    function apiGet(url, onSuccess) {
-        GM_xmlhttpRequest({
-            method: 'GET', url, timeout: 15000, headers: { 'Accept': 'application/json' },
-            onload: (res) => {
-                const data = safeJsonParse(res.responseText);
-                if (data?.return_code === 0 && data.data?.resultCode === 0) onSuccess(data.data);
-                else addLog(`接口返回异常`);
-            },
-            onerror: () => addLog(`无法连接`)
-        });
-    }
-
-    function safeJsonParse(s) { try { return JSON.parse(s); } catch (e) { return null; } }
-
-    function playBeep() { try { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); const osc = audioContext.createOscillator(); const g = audioContext.createGain(); osc.connect(g); g.connect(audioContext.destination); osc.frequency.value = 880; g.gain.linearRampToValueAtTime(0.2, audioContext.currentTime+0.1); g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime+0.8); osc.start(); osc.stop(audioContext.currentTime+0.8); } catch(e){} }
+    function playBeep() { try { if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); const osc = audioContext.createOscillator(); const g = audioContext.createGain(); osc.connect(g); g.connect(audioContext.destination); osc.frequency.value = 880; g.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.1); g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8); osc.start(); osc.stop(audioContext.currentTime + 0.8); } catch(e){} }
 
     function enableDrag(el, h) { let isD = false, ox = 0, oy = 0; h.onmousedown = (e) => { isD = true; ox = e.clientX - el.offsetLeft; oy = e.clientY - el.offsetTop; }; document.onmouseup = () => isD = false; document.onmousemove = (e) => { if (isD) { el.style.left = (e.clientX - ox) + 'px'; el.style.top = (e.clientY - oy) + 'px'; el.style.transform = 'none'; } }; }
 
