@@ -44,7 +44,7 @@
         }
     }
 
-    // =============== [登录组件逻辑] 自动协议勾选 ===============
+
     if (isLoginPage) {
         addLog('登录组件检测成功，开始执行协议自动勾选...');
 
@@ -56,17 +56,15 @@
 
             if (checkbox && !checkbox.checked) {
                 try {
-                    // 1. 强制设为选中
+
                     checkbox.checked = true;
 
-                    // 2. 模拟完整的交互事件序列，触发网页原生脚本监听
                     const events = ['mousedown', 'click', 'mouseup', 'change'];
                     events.forEach(evtType => {
                         const ev = new Event(evtType, { bubbles: true, cancelable: true });
                         checkbox.dispatchEvent(ev);
                     });
 
-                    // 3. 辅助点击文字标签（双重保障）
                     if (agreementLabel) agreementLabel.click();
 
                     addLog('用户协议已执行勾选操作');
@@ -75,21 +73,20 @@
                 }
             }
 
-            // 如果已经勾选成功，为了防止页面动态加载刷新状态，脚本会继续监控但不再频繁操作
-            // 如果 checkbox 消失了（如跳转了），定时器会自动随页面销毁
+
         }, 250);
 
-        return; // 登录页逻辑到此为止
+        return; 
     }
 
-    // =============== [跨区主页面逻辑] ===============
+
     if (!isMainPage) return;
 
     window.addEventListener('message', (e) => {
         if (e.data && e.data.type === 'FF14_TRACE_LOG') addLog(e.data.content);
     });
 
-    // 声明全局变量
+ 
     let FF14_GROUP_LIST = null;
     let FF14_STATUS_INFO = null;
     let selectedRoleInfo = null;
@@ -191,7 +188,6 @@
         addLog('脚本已启动');
     }
 
-    // --- 跨区传送相关逻辑函数 (保持原样) ---
     function fetchServerData() {
         addLog('正在请求服务器列表...');
         GM_xmlhttpRequest({
