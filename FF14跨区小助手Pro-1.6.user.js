@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FF14跨区小助手Pro
 // @namespace    https://github.com/gezimao/DCtravelerWeb
-// @version      1.5
+// @version      1.6
 // @description  FF14 跨区传送辅助脚本 - 自动监控服务器状态并执行跨区传送
 // @author       LIDaoJY,gezimao
 // @match        https://ff14bjz.sdo.com/RegionKanTelepo*
@@ -15,6 +15,8 @@
 // @run-at       document-end
 // @connect      ff14bjz.sdo.com
 // @license      MIT
+// @downloadURL https://update.greasyfork.org/scripts/564602/FF14%E8%B7%A8%E5%8C%BA%E5%B0%8F%E5%8A%A9%E6%89%8BPro.user.js
+// @updateURL https://update.greasyfork.org/scripts/564602/FF14%E8%B7%A8%E5%8C%BA%E5%B0%8F%E5%8A%A9%E6%89%8BPro.meta.js
 // ==/UserScript==
 
 (function () {
@@ -310,7 +312,7 @@
                 }
             });
         };
-        characterSelectionWindow.querySelector('#btn-ok').onclick = () => { addLog(`已选定角色: ${selectedRoleInfo.roleName}`); characterSelectionWindow.style.display='none'; updateLinkStartState(); };
+        characterSelectionWindow.querySelector('#btn-ok').onclick = () => { addLog(`已选定角色: ${selectedRoleInfo.roleName}`); characterSelectionWindow.style.display='none'; updateLinkStartState();openTargetWindow(); };
         enableDrag(characterSelectionWindow, characterSelectionWindow.querySelector('.ff14-window-header')); characterSelectionWindow.querySelector('.ff14-window-btn').onclick = () => characterSelectionWindow.style.display='none';
     }
 
