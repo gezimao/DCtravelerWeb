@@ -31,7 +31,7 @@
 
 支持以下脚本管理器：
 
-- Tampermonkey（油猴）
+- Tampermonkey（油叉/叫油猴也行）
 - ScriptCat（脚本猫）
 
 安装步骤：
